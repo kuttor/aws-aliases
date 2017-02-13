@@ -1,0 +1,68 @@
+[toplevel] 
+# Custom AWS Aliases
+#
+# instances = describe all va's per account
+instances = ec2 describe-instances --output table \
+  --query 'Reservations[].Instances[].{
+    Name:Tags[?Key==`Name`].Value|[0],
+    Project:Tags[?Key==`Project`].Value|[0],
+    ID:InstanceId,
+    PrivateIP:PrivateIpAddress,
+    PublicIP:PublicIpAddress,
+    Status:State.Name
+  }'
+#
+# cfstacks = list all CF stacks and their status
+cfstacks = cloudformation describe-stacks --output table \
+  --query 'Stacks[].{
+    Name:StackName,
+    Status:StackStatus
+  }'
+#
+# secgroups = list all security groups
+secgroups = ec2 describe-security-groups --output table \
+  --query 'SecurityGroups[].{
+    Name:GroupName,
+    ID:GroupId,
+    Owner:OwnerId
+  }'
+#
+# vpcs = list all vpcs and important info
+vpcs = ec2 describe-vpcs --output table \
+  --query 'Vpcs[].{
+    ID:VpcId,
+    Name:Tags[?Key==`Name`].Value|[0],
+    Status:State
+  }'
+#
+# subnets = list all subnets and important info
+subnets = ec2 describe-subnets --output table \
+  --query 'Subnets[].{
+    Name:Tags[?Key==`Name`].Value|[0],
+    ID:SubnetId,
+    AZ:AvailabilityZone,
+    VPCId:VpcId
+  }'
+#
+# elbs = list all elbs and important info
+elbs = elb describe-load-balancers --output table \
+  --query 'LoadBalancerDescriptions[].{
+    Name:LoadBalancerName, 
+    SourceSG:SourceSecurityGroup.GroupName
+  }'
+#
+# region = list or set region
+region = 
+  !f() { 
+    [[ $# -eq 1 ]] && aws configure set region "$1" \
+    || aws configure get region;
+  }; f
+#
+# Switches to a target IAM CLI user
+profile =
+  !f() {
+    [[ $# -eq 1 ]] && \
+      printf 'Switching profile to $1: '\
+      export AWS_DEFAULT_PROFILE=$1 \
+    || aws configure list;
+  }; f
