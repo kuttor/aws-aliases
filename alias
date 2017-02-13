@@ -8,7 +8,7 @@ aliases =
     grep -E ^"#" ~/.aws/cli/alias;
   }; f
 #
-# instances: describe all va's per account
+# instances: describe all instances per account
 instances = ec2 describe-instances --output table \
   --query 'Reservations[].Instances[].{
     Name:Tags[?Key==`Name`].Value|[0],
